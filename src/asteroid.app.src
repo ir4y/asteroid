@@ -1,0 +1,12 @@
+{application, asteroid,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { asteroid_app, []}},
+  {env, []}
+ ]}.
