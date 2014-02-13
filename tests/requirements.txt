@@ -1,0 +1,2 @@
+pytest==2.5.2
+websocket-client==0.12.0
