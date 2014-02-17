@@ -1,4 +1,5 @@
 import pytest
+import json
 from websocket import create_connection
 
 
@@ -13,6 +14,32 @@ def ws(request):
 
 
 def test_echo(ws):
-    ws.send("Hello, World")
+    data = {
+        'resource': None,
+        'function': 'echo',
+        'arguments': ["Hello, World"]}
+    ws.send(json.dumps(data))
     result = ws.recv()
     assert result == "Hello, World"
+
+
+def test_create(ws):
+    data = {
+        'resource': 'kvs_box',
+        'function': 'create',
+        'arguments': [{'id': 1,
+                       'user': 'ir4y',
+                       'email': 'ir4y.ix@gmail.com'}]}
+    ws.send(json.dumps(data))
+    result = ws.recv()
+    assert result == "ok"
+
+    data = {
+        'resource': 'kvs_box',
+        'function': 'get',
+        'arguments': [1]}
+    ws.send(json.dumps(data))
+    result = json.loads(ws.recv())
+    assert result == {'id': 1,
+                      'user': 'ir4y',
+                      'email': 'ir4y.ix@gmail.com'}

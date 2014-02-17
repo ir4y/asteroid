@@ -13,9 +13,11 @@
 %% ===================================================================
 
 start() ->
-    ok = ensure_started(?APPS).
+    ok = ensure_started(?APPS),
+    ok = sync:go().
 
 stop() ->
+    ok = sync:stop(),
     ok = stop_apps(lists:reverse(?APPS)).
 
 %% ===================================================================
