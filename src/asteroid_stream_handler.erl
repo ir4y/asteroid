@@ -5,13 +5,12 @@
 -export([info/3]).
 -export([terminate/2]).
 
--export([echo/4, create/4, get/4]).
+-record(state, {rpc_handlers}).
 
--define(PERIOD, 1000).
-
-init(_Transport, Req, _Opts, _Active) ->
+init(_Transport, Req, Opts, _Active) ->
 	io:format("bullet init~n"),
-	{ok, Req, state}.
+    RpcHandlers = proplists:get_value(rpc_handlers, Opts),
+	{ok, Req, #state{rpc_handlers=RpcHandlers}}.
 
 stream(<<"ping: ", Name/binary>>, Req, State) ->
 	io:format("ping ~p received~n", [Name]),
@@ -20,7 +19,10 @@ stream(Data, Req, State) ->
     [{<<"function">>, Function},
      {<<"resource">>, Resource},
      {<<"arguments">>,Arguments}] = jsx:decode(Data),
-    ?MODULE:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments, Req, State).
+    Handler = dict:fetch(erlang:binary_to_atom(Resource, utf8),
+                         State#state.rpc_handlers),
+    Responce = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments),
+    {reply, Responce, Req, State}.
 
 info(Info, Req, State) ->
 	io:format("info received ~p~n", [Info]),
@@ -29,19 +31,3 @@ info(Info, Req, State) ->
 terminate(_Req, _State) ->
 	io:format("bullet terminate~n"),
 	ok.
-
-
-echo(_Resource, [String], Req, State) ->
-    {reply, String, Req, State}.
-
-create(Resource, [Json], Req, State) ->
-    Module = (erlang:binary_to_atom(Resource, utf8)),
-    Record = Module:json_to_rec(Json),
-    kvs:put(Record),
-    {reply, <<"ok">>, Req, State}.
-
-get(Resource, [Index], Req, State) ->
-    Module = (erlang:binary_to_atom(Resource, utf8)),
-    {ok, Rec} = kvs:get(Module:bucket(), Index),
-    Json = Module:rec_to_json(Rec),
-    {reply, jsx:to_json(Json), Req, State}.

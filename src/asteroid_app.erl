@@ -10,9 +10,11 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-     Dispatch = cowboy_router:compile([
+    RpcHandlers = dict:from_list([{box, kvs_box}]),
+    Dispatch = cowboy_router:compile([
                 {'_', [{"/bullet", bullet_handler,
-                        [{handler, asteroid_stream_handler}]}]}]),
+                        [{handler, asteroid_stream_handler},
+                         {rpc_handlers, RpcHandlers}]}]}]),
     Ip = {0, 0, 0, 0},
     Port = 8008,
     {ok, _} = cowboy:start_http(
