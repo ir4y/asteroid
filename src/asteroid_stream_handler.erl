@@ -18,12 +18,22 @@ stream(<<"ping: ", Name/binary>>, Req, State) ->
 stream(Data, Req, State) ->
     [{<<"function">>, Function},
      {<<"resource">>, Resource},
+     {<<"uuid">>, Uuid},
      {<<"arguments">>,Arguments}] = jsx:decode(Data),
     Handler = dict:fetch(erlang:binary_to_atom(Resource, utf8),
                          State#state.rpc_handlers),
-    Responce = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments),
-    {reply, Responce, Req, State}.
+    Parent = self(),
+    erlang:spawn(fun() ->
+                         Response = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments),
+                         Parent ! {rpc_done, Uuid, Response}
+                 end),
+    {ok, Req, State}.
 
+info({rpc_done, Uuid, Response}, Req, State) ->
+    {reply,
+     erlang:binary_to_list(Uuid) ++ ":" ++ Response,
+     Req,
+     State};
 info(Info, Req, State) ->
 	io:format("info received ~p~n", [Info]),
 	{ok, Req, State}.
