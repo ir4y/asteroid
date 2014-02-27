@@ -6,7 +6,7 @@
     ]).
 
 -define(APPS, [mnesia, amqp_client, mqs, kvs,
-               crypto, ranch, cowlib, cowboy, asteroid]).
+               crypto, ranch, cowlib, cowboy, asteroid, celery]).
 
 %% ===================================================================
 %% API functions

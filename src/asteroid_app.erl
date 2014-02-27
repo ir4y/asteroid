@@ -10,7 +10,8 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    RpcHandlers = dict:from_list([{box, kvs_box}]),
+    RpcHandlers = dict:from_list([{box, kvs_box},
+                                  {celery, python_celery}]),
     Dispatch = cowboy_router:compile([
                 {'_', [{"/bullet", bullet_handler,
                         [{handler, asteroid_stream_handler},
