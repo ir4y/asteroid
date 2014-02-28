@@ -22,7 +22,6 @@ def call_box(ws, function, *args):
         'function': function,
         'arguments': args}
     ws.send(json.dumps(data))
-    assert "accepted" == ws.recv()
     return call_uuid
 
 
@@ -85,7 +84,6 @@ def call_celery(ws, function, *args):
         'function': function,
         'arguments': args}
     ws.send(json.dumps(data))
-    assert "accepted" == ws.recv()
     return call_uuid
 
 
