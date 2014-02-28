@@ -13,7 +13,8 @@ start(_StartType, _StartArgs) ->
     RpcHandlers = dict:from_list([{box, kvs_box},
                                   {celery, python_celery}]),
     Dispatch = cowboy_router:compile([
-                {'_', [{"/bullet", bullet_handler,
+                {'_', [{"/static/[...]", cowboy_static, {dir,"priv"}},
+                       {"/bullet", bullet_handler,
                         [{handler, asteroid_stream_handler},
                          {rpc_handlers, RpcHandlers}]}]}]),
     Ip = {0, 0, 0, 0},

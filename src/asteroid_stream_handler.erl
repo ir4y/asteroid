@@ -12,14 +12,14 @@ init(_Transport, Req, Opts, _Active) ->
     RpcHandlers = proplists:get_value(rpc_handlers, Opts),
 	{ok, Req, #state{rpc_handlers=RpcHandlers}}.
 
-stream(<<"ping: ", Name/binary>>, Req, State) ->
-	io:format("ping ~p received~n", [Name]),
+stream(<<"ping">>, Req, State) ->
 	{reply, <<"pong">>, Req, State};
 stream(Data, Req, State) ->
-    [{<<"function">>, Function},
-     {<<"resource">>, Resource},
-     {<<"uuid">>, Uuid},
-     {<<"arguments">>,Arguments}] = jsx:decode(Data),
+    Json = jsx:decode(Data),
+    Function = proplists:get_value(<<"function">>, Json),
+    Resource = proplists:get_value(<<"resource">>, Json),
+    Uuid = proplists:get_value(<<"uuid">>, Json),
+    Arguments = proplists:get_value(<<"arguments">>, Json),
     Handler = dict:fetch(erlang:binary_to_atom(Resource, utf8),
                          State#state.rpc_handlers),
     Parent = self(),
