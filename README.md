@@ -41,5 +41,11 @@ py.test
 
 Javascript example
 ------------------
-You can open http://localhost:8008/static/index.html in your browser and test `add` and `add_delay` rpc calls.
+First you need install bower packages
+```
+npm install -g bower
+cd priv/
+bower install
+```
+Next open http://localhost:8008/static/index.html in your browser and test `Add` and `Add delay` rpc calls.
 

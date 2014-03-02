@@ -1,56 +1,19 @@
 <html>
     <head>
-        <script src="/static/jquery-2.0.3.min.js"></script>
-        <script src="/static/bullet.js"></script>
-        <script>
-            $(document).ready(function(){
-                var bullet = $.bullet('ws://localhost:8008/bullet');
-                bullet.onopen = function(){
-                    console.log('bullet: opened');
-                    var element = $("<span>" + 'bullet: opened' +"</span><br/>");
-                    $('div.output').prepend(element);
-
-                };
-                bullet.ondisconnect = function(){
-                    console.log('bullet: disconnected');
-                };
-                bullet.onclose = function(){
-                    console.log('bullet: closed');
-                };
-                bullet.onmessage = function(e){
-                    var element = $("<span>" + e.data +"</span><br/>");
-                    $('div.output').prepend(element);
-                };
-                bullet.onheartbeat = function(){
-                    bullet.send('ping');
-                }
-                $('#send').click(function(){
-                    data = {
-                        'function': 'add',
-                        'resource': 'celery',
-                        'uuid': 'uuid',
-                        'arguments': [parseInt($('#A').val()),
-                                      parseInt($('#B').val())]};
-                    bullet.send(JSON.stringify(data));
-                });
-                $('#send_delay').click(function(){
-                    data = {
-                        'function': 'add_delay',
-                        'resource': 'celery',
-                        'uuid': 'uuid',
-                        'arguments': [parseInt($('#A').val()),
-                                      parseInt($('#B').val())]};
-                    bullet.send(JSON.stringify(data));
-                });
-
-            });
-        </script>
+        <script src="bower_components/angular/angular.min.js"></script>
+        <script src="bower_components/angular-rpc/src/angular-rpc.js"></script>
+        <script src="app.js"></script>
     </head>
-    <body>
-        <input id="A"><input id="B">
-        <button id="send">Send</button>
-        <button id="send_delay">Send Delay</button>
-        <br>
-        <div class="output"></div>
+    <body ng-app="MainApp" ng-controller="MainCtrl">
+        <label for="first">First number</label>
+        <input id="first" ng-model="first">
+        <br/>
+        <label for="second">Second number</label>
+        <input id="second" ng-model="second">
+        <br/>
+        <span>Result: {{ result }}</span>
+        <br/>
+        <button ng-click="add()">Add</button>
+        <button ng-click="add_delay()">Add delay</button>
     </body>
 </html>

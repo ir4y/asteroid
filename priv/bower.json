@@ -1,0 +1,21 @@
+{
+  "name": "asteroid-angular-test",
+  "version": "0.0.1",
+  "homepage": "https://github.com/ir4y/asteroid",
+  "authors": [
+    "jackdevil <dg@allsol.ru>"
+  ],
+  "description": "Test for angular rpc for asteroid",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-rpc": "*",
+    "angular": "1.2.4"
+  }
+}
