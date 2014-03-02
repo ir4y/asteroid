@@ -1,6 +1,5 @@
 rebar
 priv/bower_components/
-asteroid_ve/
 .eunit
 deps
 *.o

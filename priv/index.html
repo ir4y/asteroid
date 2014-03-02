@@ -5,9 +5,15 @@
         <script src="app.js"></script>
     </head>
     <body ng-app="MainApp" ng-controller="MainCtrl">
-        <input ng-model="first">
-        <input ng-model="second">
-        <span>{{ result }}</span>
-        <button ng-click="send()">Send</button>
+        <label for="first">First number</label>
+        <input id="first" ng-model="first">
+        <br/>
+        <label for="second">Second number</label>
+        <input id="second" ng-model="second">
+        <br/>
+        <span>Result: {{ result }}</span>
+        <br/>
+        <button ng-click="add()">Add</button>
+        <button ng-click="add_delay()">Add delay</button>
     </body>
 </html>
