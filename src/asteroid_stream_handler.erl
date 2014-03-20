@@ -31,7 +31,7 @@ stream(Data, Req, State) ->
 
 info({rpc_done, Uuid, Response}, Req, State) ->
     {reply,
-     erlang:binary_to_list(Uuid) ++ ":" ++ Response,
+     jsx:encode([{<<"uuid">>, Uuid}] ++ jsx:decode(Response)),
      Req,
      State};
 info(Info, Req, State) ->
