@@ -13,7 +13,10 @@ init(_Transport, Req, Opts, _Active) ->
 	{ok, Req, #state{rpc_handlers=RpcHandlers}}.
 
 stream(<<"ping">>, Req, State) ->
-	{reply, <<"pong">>, Req, State};
+	{reply,
+     jsx:encode([{<<"status">>, <<"pong">>}]),
+     Req,
+     State};
 stream(Data, Req, State) ->
     Json = jsx:decode(Data),
     Function = proplists:get_value(<<"function">>, Json),
