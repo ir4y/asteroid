@@ -10,8 +10,9 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    RpcHandlers = dict:from_list([{box, kvs_box},
-                                  {celery, python_celery}]),
+    RpcHandlers = dict:from_list([%{box, kvs_box}, temporary unused
+                                  {celery, python_celery},
+                                  {pubsub, pubsub}]),
     Dispatch = cowboy_router:compile([
                 {'_', [{"/static/[...]", cowboy_static, {dir,"priv"}},
                        {"/bullet", bullet_handler,
@@ -21,7 +22,7 @@ start(_StartType, _StartArgs) ->
     Port = 8008,
     {ok, _} = cowboy:start_http(
             http, 100, [{ip, Ip}, {port, Port}], [{env, [{dispatch, Dispatch}]}]),
-    asteroid_sup:start_link().
-
+    asteroid_sup:start_link(),
+    subscriber:start_link().
 stop(_State) ->
     ok.

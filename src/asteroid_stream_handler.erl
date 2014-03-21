@@ -27,7 +27,7 @@ stream(Data, Req, State) ->
                          State#state.rpc_handlers),
     Parent = self(),
     erlang:spawn(fun() ->
-                         Response = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments),
+                         Response = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments, Uuid, Parent),
                          Parent ! {rpc_done, Uuid, Response}
                  end),
     {ok, Req, State}.
