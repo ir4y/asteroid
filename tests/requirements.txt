@@ -1,10 +1,8 @@
 amqp==1.4.3
 anyjson==0.3.3
 argparse==1.2.1
-bert==1.0.0
 billiard==3.3.0.16
 celery==3.1.9
-erlastic==1.1.0
 kombu==3.0.12
 py==1.4.20
 pytest==2.5.2
