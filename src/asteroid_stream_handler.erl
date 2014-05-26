@@ -23,13 +23,11 @@ stream(Data, Req, State) ->
     Resource = proplists:get_value(<<"resource">>, Json),
     Uuid = proplists:get_value(<<"uuid">>, Json),
     Arguments = proplists:get_value(<<"arguments">>, Json),
-    Handler = dict:fetch(erlang:binary_to_atom(Resource, utf8),
+    Module = dict:fetch(erlang:binary_to_atom(Resource, utf8),
                          State#state.rpc_handlers),
-    Parent = self(),
-    erlang:spawn_link(fun() ->
-                         Response = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments, Uuid, Parent),
-                         Parent ! {rpc_done, Uuid, Response}
-                 end),
+    Periodical = proplists:get_value(<<"periodical">>, Json),
+    asteroid_call_handler:start_link(Module, erlang:binary_to_atom(Function, utf8),
+                                       Arguments, Uuid, Periodical),
     {ok, Req, State}.
 
 info({rpc_done, Uuid, Response}, Req, State) ->

@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, subscribe/2]).
+-export([start_link/0, subscribe/1, unsubscribe/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -22,8 +22,8 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-subscribe(Channel, Info) ->
-    gen_server:call(?MODULE, {subscribe, Channel, Info}).
+subscribe(Channel) ->
+    gen_server:call(?MODULE, {subscribe, Channel}).
 
 unsubscribe(Channel) ->
     gen_server:call(?MODULE, {unsubscribe, Channel}).
@@ -36,14 +36,14 @@ init([]) ->
     ok = eredis_sub:controlling_process(Subscribe, self()),
     {ok, #state{subscribe=Subscribe, clients=[]}}.
 
-handle_call({subscribe, Channel, {Uuid, Parent}}, {_Pid, _Ref}, State) ->
+handle_call({subscribe, Channel}, {Pid, _Ref}, State) ->
     case has_channel(State#state.clients, Channel) of
         false -> 
             io:format("Subscribed to ~p~n", [Channel]),
             ok = eredis_sub:subscribe(State#state.subscribe, [Channel]);
         true -> ok
     end,
-    {reply, ok, State#state{clients=[{Channel, Uuid, Parent} | State#state.clients]}};
+    {reply, ok, State#state{clients=[{Channel, Pid} | State#state.clients]}};
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
@@ -58,9 +58,9 @@ handle_info({subscribed, _Channel, _Pid}, State) ->
 handle_info({unsubscribed, _Channel, _Pid}, State) ->
     eredis_sub:ack_message(State#state.subscribe),
     {noreply, State};
-handle_info(Message={message, Channel, Mes, _Pid}, State) ->
+handle_info({message, Channel, Mes, _Pid}, State) ->
     io:format("Got message ~p~n", [Mes]),
-    [Pid !  {rpc_done, Uuid, Mes} || {SubChannel, Uuid, Pid} <- State#state.clients, Channel =:= SubChannel],
+    [Pid !  {message, Mes} || {SubChannel, Pid} <- State#state.clients, Channel =:= SubChannel],
     eredis_sub:ack_message(State#state.subscribe),
     {noreply, State};
 handle_info(Info, State) ->
@@ -77,6 +77,6 @@ code_change(_OldVsn, State, _Extra) ->
 %%% internal functions 
 %%%%%%===================================================================
 has_channel(Clients, Channel) ->
-    lists:any(fun({Ch, _, _}) -> Ch =:= Channel end,
+    lists:any(fun({Ch, _}) -> Ch =:= Channel end,
               Clients).
 

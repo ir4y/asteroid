@@ -1,8 +1,7 @@
 -module(pubsub).
 
--export([subscribe_to/4]).
+-export([subscribe_to/1]).
 
-subscribe_to(_Resource, [Channel], Uuid, Parent) ->
+subscribe_to([Channel]) ->
     jsx:encode([{<<"status">>, <<"SUCCESS">>},
-                {<<"result">>, subscriber:subscribe(Channel,
-                                                     {Uuid, Parent})}]).
+                {<<"result">>, subscriber:subscribe(Channel)}]).
