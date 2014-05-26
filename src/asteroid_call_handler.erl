@@ -22,7 +22,7 @@
 %%--------------------------------------------------------------------
 %% @doc
 %% Starts the server
-%%
+%%(
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
@@ -31,7 +31,7 @@ start_link(Module, Function, Arguments, Uuid, Periodical) ->
   case Periodical of 
     true -> gen_server:start_link(?MODULE, [Module, Function, Arguments, Uuid, Parent], []);
     _    -> erlang:spawn_link(fun() ->
-                                Parent ! {rpc_done, Uuid, (Module:Function)(Arguments)}
+                                Parent ! {rpc_done, Uuid, Module:handle(Function, Arguments)}
                               end)
   end.
 
@@ -52,7 +52,7 @@ start_link(Module, Function, Arguments, Uuid, Periodical) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Module, Function, Arguments, Uuid, Parent]) ->
-    self() ! {message, (Module:Function)(Arguments)},
+    self() ! {message, Module:handle(Function,Arguments)},
     {ok, #state{uuid=Uuid, parent=Parent}}.
 
 %%--------------------------------------------------------------------

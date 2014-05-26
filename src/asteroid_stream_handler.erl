@@ -26,18 +26,15 @@ stream(Data, Req, State) ->
     Module = dict:fetch(erlang:binary_to_atom(Resource, utf8),
                          State#state.rpc_handlers),
     Periodical = proplists:get_value(<<"periodical">>, Json),
-    asteroid_call_handler:start_link(Module, erlang:binary_to_atom(Function, utf8),
-                                       Arguments, Uuid, Periodical),
+    asteroid_call_handler:start_link(Module, Function,
+                                     Arguments, Uuid, Periodical),
     {ok, Req, State}.
 
 info({rpc_done, Uuid, Response}, Req, State) ->
     {reply,
      jsx:encode([{<<"uuid">>, Uuid}] ++ jsx:decode(Response)),
      Req,
-     State};
-info(Info, Req, State) ->
-	io:format("info received ~p~n", [Info]),
-	{ok, Req, State}.
+     State}.
 
 terminate(_Req, _State) ->
 	io:format("bullet terminate~n"),

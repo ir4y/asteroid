@@ -39,7 +39,6 @@ init([]) ->
 handle_call({subscribe, Channel}, {Pid, _Ref}, State) ->
     case has_channel(State#state.clients, Channel) of
         false -> 
-            io:format("Subscribed to ~p~n", [Channel]),
             ok = eredis_sub:subscribe(State#state.subscribe, [Channel]);
         true -> ok
     end,
@@ -59,12 +58,8 @@ handle_info({unsubscribed, _Channel, _Pid}, State) ->
     eredis_sub:ack_message(State#state.subscribe),
     {noreply, State};
 handle_info({message, Channel, Mes, _Pid}, State) ->
-    io:format("Got message ~p~n", [Mes]),
     [Pid !  {message, Mes} || {SubChannel, Pid} <- State#state.clients, Channel =:= SubChannel],
     eredis_sub:ack_message(State#state.subscribe),
-    {noreply, State};
-handle_info(Info, State) ->
-    io:format("Unknown message ~p~n", [Info]),
     {noreply, State}.
 
 terminate(_Reason, _State) ->
