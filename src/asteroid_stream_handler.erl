@@ -9,7 +9,7 @@
 
 init(_Transport, Req, Opts, _Active) ->
 	io:format("bullet init~n"),
-    RpcHandlers = proplists:get_value(rpc_handlers, Opts),
+  RpcHandlers = proplists:get_value(rpc_handlers, Opts),
 	{ok, Req, #state{rpc_handlers=RpcHandlers}}.
 
 stream(<<"ping">>, Req, State) ->
