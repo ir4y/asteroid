@@ -26,7 +26,7 @@ stream(Data, Req, State) ->
     Handler = dict:fetch(erlang:binary_to_atom(Resource, utf8),
                          State#state.rpc_handlers),
     Parent = self(),
-    erlang:spawn(fun() ->
+    erlang:spawn_link(fun() ->
                          Response = Handler:(erlang:binary_to_atom(Function, utf8))(Resource, Arguments, Uuid, Parent),
                          Parent ! {rpc_done, Uuid, Response}
                  end),

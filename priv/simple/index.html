@@ -9,7 +9,12 @@
                     console.log('bullet: opened');
                     var element = $("<span>" + 'bullet: opened' +"</span><br/>");
                     $('div.output').prepend(element);
-
+                    data = {
+                        'function': 'subscribe_to',
+                        'resource': 'pubsub',
+                        'uuid': 'subscribe_uuid',
+                        'arguments': ["test_channel"]};
+                    bullet.send(JSON.stringify(data));
                 };
                 bullet.ondisconnect = function(){
                     console.log('bullet: disconnected');
@@ -42,7 +47,6 @@
                                       parseInt($('#B').val())]};
                     bullet.send(JSON.stringify(data));
                 });
-
             });
         </script>
     </head>
