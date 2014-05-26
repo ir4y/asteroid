@@ -46,10 +46,16 @@
                         'function': 'subscribe_to',
                         'resource': 'pubsub',
                         'uuid': 'subscribe_uuid',
-                        'periodical': true,
                         'arguments': [$('#channel').val()]};
                     bullet.send(JSON.stringify(data));
                 });
+                $('#unsubscribe').click(function(){
+                    data = {
+                        'uuid': 'unsubscribe_uuid',
+                        'terminate': $('#channel').val()};
+                    bullet.send(JSON.stringify(data));
+                });
+
             });
         </script>
     </head>
@@ -58,8 +64,9 @@
         <button id="send">Send</button>
         <button id="send_delay">Send Delay</button>
         <br>
-        <input id="channel" value="test_chanel" >
+        <input id="channel" value="test_channel" >
         <button id="subscribe">Subscribe</button>
+        <button id="unsubscribe">Unubscribe</button>
         <br>
         <div class="output"></div>
     </body>

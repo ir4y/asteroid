@@ -36,7 +36,12 @@ stream(Data, Req, State) ->
             Pereodical -> {ok, Req, State#state{periodicals=[{Uuid, Pid} | State#state.periodicals]}};
             true -> {ok, Req, State}
           end;
-      _ -> {ok, Req, terminate_periodical(TerminateUuid, State)}
+      _ -> 
+        NewState = terminate_periodical(TerminateUuid, State),
+        {reply,
+         jsx:encode([{<<"uuid">>, Uuid},{<<"result">>, State#state.periodicals =/= NewState#state.periodicals}]),
+         Req,
+         NewState}
     end.
 
 info({rpc_done, Uuid, Response}, Req, State) ->
