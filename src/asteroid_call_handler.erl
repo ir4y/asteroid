@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/5]).
+-export([start_link/4, stop/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -13,7 +13,7 @@
          terminate/2,
          code_change/3]).
 
--record(state, {uuid, parent}).
+-record(state, {module, function, uuid, parent, on_terminate}).
 
 %%%===================================================================
 %%% API
@@ -26,15 +26,19 @@
 %% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-start_link(Module, Function, Arguments, Uuid, Periodical) ->
+start_link(Module, Function, Arguments, Uuid) ->
   Parent = self(),
-  case Periodical of 
+  Periodical =  Module:is_periodical(Function),
+  {Periodical,
+   case Periodical of 
     true -> gen_server:start_link(?MODULE, [Module, Function, Arguments, Uuid, Parent], []);
-    _    -> erlang:spawn_link(fun() ->
-                                Parent ! {rpc_done, Uuid, Module:handle(Function, Arguments)}
-                              end)
-  end.
+    _    -> {ok, erlang:spawn_link(fun() ->
+                                       Parent ! {rpc_done, Uuid, Module:handle(Function, Arguments)}
+                                   end)}
+   end}.
 
+stop(Pid) ->
+  gen_server:call(Pid, {stop}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -52,8 +56,9 @@ start_link(Module, Function, Arguments, Uuid, Periodical) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Module, Function, Arguments, Uuid, Parent]) ->
-    self() ! {message, Module:handle(Function,Arguments)},
-    {ok, #state{uuid=Uuid, parent=Parent}}.
+    {OnTerminate, Result} = Module:handle(Function,Arguments),
+    self() ! {message, Result},
+    {ok, #state{module=Module, function=Function, uuid=Uuid, parent=Parent, on_terminate=OnTerminate}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -69,9 +74,8 @@ init([Module, Function, Arguments, Uuid, Parent]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
+handle_call({stop}, _From, State) ->
+    {stop, undefined, ok, State}. 
 
 %%--------------------------------------------------------------------
 %% @private
@@ -111,7 +115,8 @@ handle_info({message, Message}, State) ->
 %% @spec terminate(Reason, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    (State#state.on_terminate)(),
     ok.
 
 %%--------------------------------------------------------------------
