@@ -39,11 +39,20 @@ init([]) ->
 handle_call({subscribe, Channel}, {Pid, _Ref}, State) ->
     case has_channel(State#state.clients, Channel) of
         false -> 
+            io:format("Subscribed to ~p~n", [Channel]),
             ok = eredis_sub:subscribe(State#state.subscribe, [Channel]);
         true -> ok
     end,
     {reply, ok, State#state{clients=[{Channel, Pid} | State#state.clients]}};
-
+handle_call({unsubscribe, Channel}, {Pid, _Ref}, State) ->
+    Clients = State#state.clients -- [{Channel, Pid}],
+    case has_channel(Clients, Channel) of
+        false ->
+            io:format("Unsubscribed from ~p~n", [Channel]),
+            ok = eredis_sub:unsubscribe(State#state.subscribe, [Channel]);
+        true -> ok
+    end,
+    {reply, ok, State#state{clients=Clients}};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.

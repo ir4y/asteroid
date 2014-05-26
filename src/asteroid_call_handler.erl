@@ -38,7 +38,7 @@ start_link(Module, Function, Arguments, Uuid) ->
    end}.
 
 stop(Pid) ->
-  gen_server:call(Pid, {stop}).
+  gen_server:call(Pid, stop).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -74,8 +74,8 @@ init([Module, Function, Arguments, Uuid, Parent]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({stop}, _From, State) ->
-    {stop, undefined, ok, State}. 
+handle_call(stop, _From, State) ->
+    {stop, normal, ok, State}.
 
 %%--------------------------------------------------------------------
 %% @private
