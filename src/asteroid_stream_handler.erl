@@ -28,8 +28,11 @@ stream(Data, Req, State) ->
   
     case TerminateUuid of 
       undefined ->
-          Module = dict:fetch(erlang:binary_to_atom(Resource, utf8),
-                               State#state.rpc_handlers),
+          Key = erlang:binary_to_atom(Resource, utf8),
+          Module = case dict:is_key(Key, State#state.rpc_handlers) of
+                    true -> dict:fetch(Key, State#state.rpc_handlers);
+                    false ->dict:fetch(undefined, State#state.rpc_handlers)
+          end,
           {Pereodical, {ok, Pid}} = asteroid_call_handler:start_link(
                                 Module, Function, Arguments, Uuid),
           if 

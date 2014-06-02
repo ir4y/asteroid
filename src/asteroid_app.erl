@@ -10,8 +10,9 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    RpcHandlers = dict:from_list([{celery, python_celery},
-                                  {pubsub, pubsub}]),
+    RpcHandlers = dict:from_list([{celery, asteroid_celery},
+                                  {pubsub, asteroid_pubsub},
+                                  {undefined, asteroid_default}]),
     Dispatch = cowboy_router:compile([
                 {'_', [{"/static/[...]", cowboy_static, {dir,"priv"}},
                        {"/bullet", bullet_handler,

@@ -1,4 +1,4 @@
--module(pubsub).
+-module(asteroid_pubsub).
 
 -export([handle/2, is_periodical/1]).
 

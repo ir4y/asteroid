@@ -62,3 +62,11 @@ def test_redis(ws, rc):
     result = json.loads(ws.recv())
     assert result['uuid'] == 'subscribe_uuid'
     assert result['foo'] == 'bar'
+
+
+def test_default(ws):
+    ws.send('{"function":"strange_function","resource":"unexisting_resource","uuid":"some_uuid","arguments":[]}')
+    result = json.loads(ws.recv())
+    assert result['uuid'] == 'some_uuid'
+    assert result['result'] == 'ERROR'
+    assert result['status'] == 'ERROR'

@@ -1,4 +1,4 @@
--module(python_celery).
+-module(asteroid_celery).
 
 -include_lib("celery/include/celery.hrl").
 
