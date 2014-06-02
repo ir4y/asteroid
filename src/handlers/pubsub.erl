@@ -4,6 +4,8 @@
 
 -export([subscribe_to/1]).
 
+-behaviour(asteroid_handler).
+
 handle(FunctionName, Arguments) ->
   Function = erlang:binary_to_atom(FunctionName, utf8),
   ?MODULE:Function(Arguments).
