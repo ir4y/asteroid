@@ -3,6 +3,7 @@
         <script src="/static/jquery-2.1.1.min.js"></script>
         <script src="/static/bullet.js"></script>
         <script>
+            var session_ref;
             $(document).ready(function(){
                 var bullet = $.bullet('ws://localhost:8008/bullet');
                 bullet.onopen = function(){
@@ -16,7 +17,12 @@
                 };
                 bullet.onmessage = function(e){
                     var message = JSON.parse(e.data);
-                    if(message['uuid']=='chat_uuid' && message['username']){
+                    if(message['uuid']=='send_message' && message['status']=='ERROR'){
+                      var element = $("<span><b>" + message['result'] + "</b></span><br/>");
+                      $('div.output').prepend(element);
+                    } else if(message['uuid']=='chat_uuid' && message['session_ref']){
+                      session_ref = message['session_ref'];
+                    } else if(message['uuid']=='chat_uuid' && message['username']){
                     var element = $("<span>" + "<b>" + message['username'] + "</b>  " + message['message'] +"</span><br/>");
                       $('div.output').prepend(element);
                     }
@@ -37,7 +43,7 @@
                         'function': 'send_message',
                         'resource': 'chat',
                         'uuid': 'send_message',
-                        'arguments': [$('#login').val(),
+                        'arguments': [session_ref,
                                       $('#message').val()]};
                     bullet.send(JSON.stringify(data));
                 });

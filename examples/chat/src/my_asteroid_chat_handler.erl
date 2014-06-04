@@ -16,12 +16,17 @@ is_periodical(FunctionName) ->
   end.
 
 login([Username]) ->
+  {session_ref, SessionRef} = chat:login(Username),
   {fun() ->
-    chat:logout()
+   chat:logout(SessionRef)
    end,
    jsx:encode([{<<"status">>, <<"SUCCESS">>},
-               {<<"result">>, chat:login(Username)}])}.
+               {<<"session_ref">>, SessionRef}])}.
 
-send_message([Username, Message]) ->
-  jsx:encode([{<<"status">>, <<"SUCCESS">>},
-              {<<"result">>, chat:send_message(Username, Message)}]).
+send_message([SessionRef, Message]) ->
+  case chat:send_message(SessionRef, Message) of
+    ok -> jsx:encode([{<<"status">>, <<"SUCCESS">>},
+                      {<<"result">>, <<"ok">>}]);
+    error -> jsx:encode([{<<"status">>, <<"ERROR">>},
+                         {<<"result">>, <<"You should login first">>}])
+  end.
