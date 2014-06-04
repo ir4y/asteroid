@@ -1,12 +1,12 @@
 {application, asteroid,
  [
-  {description, ""},
-  {vsn, "1"},
+  {description, "Websocket RPC and Pub/Sub erlang framework"},
+  {vsn, "0.0.1"},
+  {modules, []},
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib
-                 ]},
-  {mod, { asteroid_app, []}},
-  {env, []}
+                  stdlib,
+                  cowboy
+                 ]}
  ]}.
