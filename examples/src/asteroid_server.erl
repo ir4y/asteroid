@@ -36,5 +36,4 @@ start_cowboy() ->
     Port = 8008,
     {ok, _} = cowboy:start_http(
             http, 100, [{ip, Ip}, {port, Port}], [{env, [{dispatch, Dispatch}]}]),
-    asteroid_sup:start_link(),
     subscriber:start_link().
