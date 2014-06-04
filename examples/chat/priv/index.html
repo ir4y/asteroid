@@ -1,0 +1,57 @@
+<html>
+    <head>
+        <script src="/static/jquery-2.1.1.min.js"></script>
+        <script src="/static/bullet.js"></script>
+        <script>
+            $(document).ready(function(){
+                var bullet = $.bullet('ws://localhost:8008/bullet');
+                bullet.onopen = function(){
+                    console.log('bullet: opened');
+                };
+                bullet.ondisconnect = function(){
+                    console.log('bullet: disconnected');
+                };
+                bullet.onclose = function(){
+                    console.log('bullet: closed');
+                };
+                bullet.onmessage = function(e){
+                    var message = JSON.parse(e.data);
+                    if(message['uuid']=='chat_uuid' && message['username']){
+                    var element = $("<span>" + "<b>" + message['username'] + "</b>  " + message['message'] +"</span><br/>");
+                      $('div.output').prepend(element);
+                    }
+                };
+                bullet.onheartbeat = function(){
+                    bullet.send('ping');
+                }
+                $('#do_login').click(function(){
+                    data = {
+                        'function': 'login',
+                        'resource': 'chat',
+                        'uuid': 'chat_uuid',
+                        'arguments': [$('#login').val()]};
+                    bullet.send(JSON.stringify(data));
+                });
+                $('#send').click(function(){
+                    data = {
+                        'function': 'send_message',
+                        'resource': 'chat',
+                        'uuid': 'send_message',
+                        'arguments': [$('#login').val(),
+                                      $('#message').val()]};
+                    bullet.send(JSON.stringify(data));
+                });
+
+            });
+        </script>
+    </head>
+    <body>
+        <input id="login" value="" >
+        <button id="do_login">Login</button>
+        <br>
+        <textarea id="message"></textarea>
+        <button id="send">Send</button>
+        <br>
+        <div class="output"></div>
+    </body>
+</html>

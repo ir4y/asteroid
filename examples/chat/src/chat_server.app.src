@@ -1,0 +1,13 @@
+%% Feel free to use, reuse and abuse the code in this file.
+
+{application, chat_server, [
+	{description, "Asteroid char example."},
+	{vsn, "1"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib,
+		cowboy
+	]}
+]}.
