@@ -1,9 +1,12 @@
--module(chat).
+-module(asteroid_chat_handler).
 
+-behaviour(asteroid_handler).
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, login/1, logout/1, send_message/2]).
+-export([start_link/0]).
+-export([handle/2, is_periodical/1]).
+-export([login/1, send_message/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -15,6 +18,7 @@
 
 -record(state, {clients}).
 
+
 %%%===================================================================
 %%% public API
 %%%===================================================================
@@ -22,15 +26,32 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-login(Username) ->
-  gen_server:call(?MODULE, {login, Username}).
+handle(FunctionName, Arguments) ->
+  Function = erlang:binary_to_atom(FunctionName, utf8),
+  ?MODULE:Function(Arguments).
 
-logout(SessionRef) ->
-  gen_server:call(?MODULE, {logout, SessionRef}).
+is_periodical(FunctionName) ->
+  case FunctionName of
+    <<"login">> -> true;
+    _ -> false
+  end.
 
-send_message(SessionRef, Message) ->
-  gen_server:call(?MODULE, {message, SessionRef, Message}).
+login([Username]) ->
+  {session_ref, SessionRef} = gen_server:call(?MODULE, {login, Username}),
+  {fun() ->
+       gen_server:call(?MODULE, {logout, SessionRef})
+       end,
+   jsx:encode([{<<"status">>, <<"SUCCESS">>},
+               {<<"session_ref">>, SessionRef}])}.
 
+send_message([SessionRef, Message]) ->
+  case gen_server:call(?MODULE, {message, SessionRef, Message}) of
+    ok -> jsx:encode([{<<"status">>, <<"SUCCESS">>},
+                      {<<"result">>, <<"ok">>}]);
+    error -> jsx:encode([{<<"status">>, <<"ERROR">>},
+                         {<<"result">>, <<"You should login first">>}])
+  end.
+ 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================

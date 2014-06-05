@@ -24,7 +24,7 @@ stop() ->
     ok = application:stop(crypto).
 
 start_cowboy() ->
-    RpcHandlers = dict:from_list([{chat, my_asteroid_chat_handler},
+    RpcHandlers = dict:from_list([{chat, asteroid_chat_handler},
                                   {undefined, asteroid_default}]),
     Dispatch = cowboy_router:compile([
                 {'_', [{"/static/[...]", cowboy_static, {dir,"priv"}},
@@ -35,4 +35,4 @@ start_cowboy() ->
     Port = 8008,
     {ok, _} = cowboy:start_http(
             http, 100, [{ip, Ip}, {port, Port}], [{env, [{dispatch, Dispatch}]}]),
-    chat:start_link().
+    asteroid_chat_handler:start_link().
