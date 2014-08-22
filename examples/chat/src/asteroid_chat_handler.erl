@@ -3,10 +3,13 @@
 -behaviour(asteroid_handler).
 -behaviour(gen_server).
 
-%% API
--export([start_link/0]).
+%%public API
+-export([start_link/0,
+         login/1,
+         send_message/1]).
+ 
+%% asteroid_handler callbacks
 -export([handle/2, is_periodical/1]).
--export([login/1, send_message/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -16,12 +19,9 @@
          terminate/2,
          code_change/3]).
 
+
 -record(state, {clients}).
-
-
-%%%===================================================================
-%%% public API
-%%%===================================================================
+-record(userinfo, {name, session, pid}).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -61,45 +61,38 @@ init([]) ->
 
 handle_call({login, Username}, {Pid, _Ref}, State) ->
     SessionRef = erlang:list_to_binary(erlang:ref_to_list(make_ref())),
-    Clients = State#state.clients ++ [{Username, SessionRef, Pid}],
-    Mesage = erlang:iolist_to_binary([<<"User ">>, Username, <<" login">>]),
-    self() ! {message, Mesage},
+    Clients = State#state.clients ++ [#userinfo{name=Username,
+                                                session=SessionRef,
+                                                pid=Pid}],
+    send_to_all(<<"CHAT SERVER">>,  
+                erlang:iolist_to_binary([<<"User ">>,
+                                         Username,
+                                         <<" login">>]),
+                Clients),
     {reply, {session_ref, SessionRef}, State#state{clients=Clients}};
-
 handle_call({logout, SessionRef}, _From, State) ->
-    Clients = lists:filter(fun({Username, UserSessionRef, _UserPid}) -> 
-                                 case SessionRef =/= UserSessionRef of
-                                   true -> true;
-                                   false -> Message = erlang:iolist_to_binary([<<"User ">>, Username, <<" logout">>]),
-                                            self() ! {message, Message},
-                                            false
-                                 end
-                               end,
-                           State#state.clients),
+   {ok, User} = userinfo_by_session(SessionRef, State#state.clients),
+    Clients = State#state.clients -- [User],
+    send_to_all(<<"CHAT SERVER">>,  
+                erlang:iolist_to_binary([<<"User ">>,
+                                         User#userinfo.name,
+                                         <<" logout">>]),
+                Clients),
     {reply, ok, State#state{clients=Clients}};
-handle_call({message, ClientSessionRef, ClientMessage}, _From, State) ->
-  case lists:filter(
-        fun({_Username, UserSessionRef, _UserPid}) -> UserSessionRef =:= ClientSessionRef end,
-        State#state.clients) of 
-              [{ClientUsername, _SessionRef, _Pid}] -> 
-                  lists:foreach(fun({_Username, _UserSesionRef, UserPid}) ->
-                                    UserPid ! {message, jsx:encode([{<<"username">>, ClientUsername},
-                                                                    {<<"message">>, ClientMessage}])}
-                                end,
-                                State#state.clients),
-                  {reply, ok, State};
-              _ ->  {reply, error, State}
-  end.
+handle_call({message, SessionRef, Message}, _From, State) ->
+    case userinfo_by_session(SessionRef, State#state.clients) of
+        {ok, User} -> send_to_all(User#userinfo.name,
+                                  Message,
+                                  State#state.clients),
+                      {reply, ok, State};
+        {error, _ErrorInfo} -> 
+                      {reply, error, State}
+    end.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info({message, MessageText}, State) ->
-    lists:foreach(fun({_Username, _SessionRef, UserPid}) ->
-                      UserPid ! {message, jsx:encode([{<<"username">>, <<"CHAT SERVER">>},
-                                                      {<<"message">>, MessageText}])}
-                  end,
-                  State#state.clients),
+handle_info(_Info, State) ->
     {noreply, State}.
 
 terminate(_Reason, _State) ->
@@ -111,3 +104,20 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+send_to_all(UserName, MessageText, Clients) ->
+  lists:foreach(fun(User) ->
+                      User#userinfo.pid ! {message,
+                                           jsx:encode([{<<"username">>, UserName},
+                                                       {<<"message">>, MessageText}])}
+                end,
+                Clients).
+
+userinfo_by_session(SessionRef, Clients) ->
+  case lists:filter(
+    fun(User) -> 
+        User#userinfo.session =:= SessionRef 
+    end,
+    Clients) of
+    [User] -> {ok, User};
+    [] -> {error, not_found}
+  end.

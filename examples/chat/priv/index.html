@@ -45,6 +45,7 @@
                         'uuid': 'send_message',
                         'arguments': [session_ref,
                                       $('#message').val()]};
+                    $('#message').val('');
                     bullet.send(JSON.stringify(data));
                 });
 
