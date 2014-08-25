@@ -33,11 +33,9 @@ stream(Data, Req, State) ->
                     true -> dict:fetch(Key, State#state.rpc_handlers);
                     false ->dict:fetch(undefined, State#state.rpc_handlers)
           end,
-          {Pereodical, {ok, Pid}} = asteroid_call_handler:start_link(
-                                Module, Function, Arguments, Uuid),
-          if 
-            Pereodical -> {ok, Req, State#state{periodicals=[{Uuid, Pid} | State#state.periodicals]}};
-            true -> {ok, Req, State}
+          case call_rpc(Module, Function, Arguments, Uuid) of
+            {periodical, Pid} -> {ok, Req, State#state{periodicals=[{Uuid, Pid} | State#state.periodicals]}};
+            {ok} -> {ok, Req, State}
           end;
       _ -> 
         NewState = terminate_periodical(TerminateUuid, State),
@@ -56,7 +54,7 @@ info({rpc_done, Uuid, Response}, Req, State) ->
 terminate(_Req, State) ->
 	io:format("bullet terminate~n"),
   lists:foreach(fun({_Uuid, Pid}) ->
-                    asteroid_call_handler:stop(Pid)
+                    Pid ! {terminate}
                 end,
                 State#state.periodicals),
 	ok.
@@ -72,3 +70,27 @@ terminate_periodical(Uuid, State) ->
 	State#state{periodicals=lists:filter(
       fun({CurrentUuid, _Pid}) -> CurrentUuid =/= Uuid end,
       State#state.periodicals)}.
+
+call_rpc(Module, Function, Arguments, Uuid) ->
+    Parent = self(),
+    Periodical =  Module:is_periodical(Function),
+    case Periodical of 
+      true -> {periodical,
+               erlang:spawn_link(fun()->
+                                     {OnTerminate, Result} = Module:handle(Function,Arguments),
+                                     Parent ! {rpc_done, Uuid, Result},
+                                     rpc_loop(Parent, Uuid, OnTerminate)
+                                 end)};
+      false    -> erlang:spawn_link(fun() ->
+                                      Parent ! {rpc_done, Uuid, Module:handle(Function, Arguments)}
+                                  end),
+                  {ok}
+   end.
+
+
+rpc_loop(Parent, Uuid, OnTerminate) -> 
+  receive 
+     {message, Message} -> Parent ! {rpc_done, Uuid, Message},
+                           rpc_loop(Parent, Uuid, OnTerminate);
+     {terminate} -> OnTerminate()
+  end.
